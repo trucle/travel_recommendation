@@ -678,7 +678,14 @@
                     <div class="content">
                         <h3>${place.name}</h3>
                         <p>${place.description}</p>
-                        ${place.timeZone ? `<p class="time">Local Time: ${getLocalTime(place.timeZone)}</p>` : ''}
+                        ${place.timeZone ? `
+                        <div class="time">
+                            <svg width="16" height="16" fill="currentColor" style="margin-right: 6px;" viewBox="0 0 16 16">
+                                <path d="M8 3.5a.5.5 0 0 0-1 0V9a.5.5 0 0 0 .252.434l3.5 2a.5.5 0 0 0 .496-.868L8 8.71V3.5z"/>
+                                <path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm7-8A7 7 0 1 1 1 8a7 7 0 0 1 14 0z"/>
+                            </svg>
+                            Current Local Time:<br>${getLocalTime(place.timeZone)}
+                        </div>` : ''}
                     </div>
                 `;
                 resultsContainer.appendChild(card);
@@ -689,21 +696,42 @@
 
         // Clear Results
         function clearResults() {
+            // Clear the search input
             document.getElementById('searchInput').value = '';
+            
+            // Clear the results container
             document.getElementById('recommendationResults').innerHTML = '';
+            
+            // Hide the results section and show the home section
             showSection('home');
+            
+            // Log that results were cleared (for debugging)
+            console.log("Search results cleared");
         }
 
         // Get Local Time
         function getLocalTime(timeZone) {
+            // Configure time display options - 12-hour format with hours, minutes, and seconds
             const options = { 
-                timeZone: timeZone, 
-                hour12: true, 
-                hour: 'numeric', 
-                minute: 'numeric', 
-                second: 'numeric' 
+                timeZone: timeZone,     // Use the provided time zone
+                hour12: true,           // Use 12-hour format (AM/PM)
+                hour: 'numeric',        // Show hours as numeric values
+                minute: 'numeric',      // Show minutes as numeric values
+                second: 'numeric',      // Show seconds as numeric values
+                weekday: 'short',       // Show short weekday name (e.g., "Mon")
+                month: 'short',         // Show short month name (e.g., "Jan")
+                day: 'numeric'          // Show day of month
             };
-            return new Date().toLocaleTimeString('en-US', options);
+            
+            try {
+                // Create a new Date object for current time and format it according to options
+                const localTime = new Date().toLocaleString('en-US', options);
+                console.log(`Local time in ${timeZone}: ${localTime}`);
+                return localTime;
+            } catch (error) {
+                console.error(`Error getting time for time zone ${timeZone}:`, error);
+                return "Time unavailable";
+            }
         }
     </script>
 </body>
