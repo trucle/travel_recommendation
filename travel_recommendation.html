@@ -553,38 +553,115 @@
             const searchInput = document.getElementById('searchInput').value.toLowerCase();
             if (!searchInput) return;
 
+            console.log("Search input:", searchInput);
+
             try {
                 const response = await fetch('travel_recommendation_api.json');
                 const data = await response.json();
+                
+                console.log("Fetched data structure:", data);
                 
                 let results = [];
                 
                 // Check for beach keywords
                 if (searchInput.includes('beach') || searchInput.includes('beaches')) {
-                    results = results.concat(data.destinations.filter(place => place.type === 'beach'));
+                    console.log("Beach keyword found");
+                    // Check data structure
+                    if (data.beaches) {
+                        console.log("Using data.beaches");
+                        results = results.concat(data.beaches);
+                    }
+                    if (data.destinations) {
+                        console.log("Using data.destinations filtered by beach type");
+                        results = results.concat(data.destinations.filter(place => place.type === 'beach'));
+                    }
                 }
                 
                 // Check for temple keywords
                 if (searchInput.includes('temple') || searchInput.includes('temples')) {
-                    results = results.concat(data.destinations.filter(place => place.type === 'temple'));
+                    if (data.temples) {
+                        results = results.concat(data.temples);
+                    }
+                    if (data.destinations) {
+                        results = results.concat(data.destinations.filter(place => place.type === 'temple'));
+                    }
                 }
                 
                 // Check for country keywords
                 if (searchInput.includes('country') || searchInput.includes('countries')) {
-                    results = results.concat(data.destinations.filter(place => place.type === 'country'));
+                    if (data.countries) {
+                        // For countries, add all cities from each country
+                        data.countries.forEach(country => {
+                            if (country.cities) {
+                                results = results.concat(country.cities);
+                            }
+                        });
+                    }
+                    if (data.destinations) {
+                        results = results.concat(data.destinations.filter(place => place.type === 'country'));
+                    }
                 }
                 
                 // If no specific keywords matched, search by name
                 if (results.length === 0) {
-                    results = data.destinations.filter(place => 
-                        place.name.toLowerCase().includes(searchInput) || 
-                        place.type.toLowerCase().includes(searchInput)
-                    );
+                    console.log("No keyword match, searching by name");
+                    
+                    // Search in destinations
+                    if (data.destinations) {
+                        results = results.concat(data.destinations.filter(place => 
+                            place.name.toLowerCase().includes(searchInput) || 
+                            place.type.toLowerCase().includes(searchInput)
+                        ));
+                    }
+                    
+                    // Search in beaches
+                    if (data.beaches) {
+                        results = results.concat(data.beaches.filter(place => 
+                            place.name.toLowerCase().includes(searchInput)
+                        ));
+                    }
+                    
+                    // Search in temples
+                    if (data.temples) {
+                        results = results.concat(data.temples.filter(place => 
+                            place.name.toLowerCase().includes(searchInput)
+                        ));
+                    }
+                    
+                    // Search in countries/cities
+                    if (data.countries) {
+                        data.countries.forEach(country => {
+                            if (country.name.toLowerCase().includes(searchInput)) {
+                                // If country name matches, add all its cities
+                                if (country.cities) {
+                                    results = results.concat(country.cities);
+                                }
+                            } else if (country.cities) {
+                                // Check city names
+                                results = results.concat(country.cities.filter(city => 
+                                    city.name.toLowerCase().includes(searchInput)
+                                ));
+                            }
+                        });
+                    }
                 }
+
+                console.log("Search results:", results);
+                
+                // Handle case where results might not have the right structure
+                results = results.map(place => {
+                    return {
+                        name: place.name || "Unknown Destination",
+                        description: place.description || "No description available",
+                        imageUrl: place.imageUrl || "https://source.unsplash.com/1600x900/?travel",
+                        timeZone: place.timeZone || null
+                    };
+                });
 
                 displayResults(results);
             } catch (error) {
                 console.error('Error fetching data:', error);
+                alert("Error fetching data. Check the console for details.");
             }
         }
 
