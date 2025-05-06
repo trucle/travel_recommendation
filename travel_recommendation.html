@@ -556,7 +556,7 @@
             console.log("Search input:", searchInput);
 
             try {
-                const response = await fetch('travel_recommendation_api.json');
+                const response = await fetch('travel_recommendation_api.json?v1');
                 const data = await response.json();
                 
                 console.log("Fetched data structure:", data);
